@@ -29,7 +29,7 @@ public class Pong extends JFrame {
         setTitle("Pong");
         setSize(WIDTH, HEIGHT);
         setResizable(false);
-        setWindowToMiddle();
+        setLocationRelativeTo(null);
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -56,12 +56,6 @@ public class Pong extends JFrame {
         } else {
             System.exit(0);
         }
-    }
-
-    private void setWindowToMiddle() {
-        // From https://stackoverflow.com/a/3680236/12976128
-        DisplayMode dm = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode();
-        setLocation(dm.getWidth() / 2 - WIDTH / 2, dm.getHeight() / 2 - HEIGHT / 2);
     }
 
     private void saveScores() {
