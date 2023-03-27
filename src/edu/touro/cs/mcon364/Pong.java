@@ -1,15 +1,13 @@
 package edu.touro.cs.mcon364;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 
 public class Pong extends JFrame {
     public static void main(String[] args) {
@@ -65,13 +63,12 @@ public class Pong extends JFrame {
             Standing s = LEADERBOARD.poll();
 
             if (s != null) {
-                props.put(i + "n", s.NAME);
-                props.put(i + "s", Integer.toString(s.SCORE));
+                props.put(s.NAME, Integer.toString(s.SCORE));
             }
         }
 
-        try {
-            props.store(new FileOutputStream("C:/Users/askat/IdeaProjects/pong-one-player-aharonk/scores.properties"), "");
+        try (FileOutputStream fos = new FileOutputStream("scores.properties")) {
+            props.store(fos, "");
         } catch (IOException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Failed to save scores.", "Saving Failed!",
@@ -90,23 +87,10 @@ public class Pong extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
         }
 
-        int[] scoreList = new int[3];
-        String[] namesList = new String[3];
-        for (Map.Entry<Object, Object> e : scores.entrySet()) {
-            String key = (String) e.getKey();
-            int place = Character.getNumericValue(key.charAt(0));
-            if (key.charAt(1) == 'n') {
-                namesList[place] = (String) e.getValue();
-            } else {
-                scoreList[place] = Integer.parseInt((String) e.getValue());
-            }
-        }
-
         LEADERBOARD = new PriorityQueue<>((o1, o2) -> o2.SCORE - o1.SCORE);
-        for (int i = 0; i < 3; i++) {
-            if (namesList[i] != null) {
-                LEADERBOARD.add(new Standing(namesList[i], scoreList[i]));
-            }
+
+        for (Map.Entry<Object, Object> e : scores.entrySet()) {
+            LEADERBOARD.add(new Standing((String) e.getKey(), Integer.parseInt((String) e.getValue())));
         }
     }
 
@@ -160,23 +144,23 @@ public class Pong extends JFrame {
     }
 
     private void submitScore(String name) {
-        if (name == null) {
-            if (LEADERBOARD.size() < 3) {
-                name = JOptionPane.showInputDialog(this, "Enter your name for the leaderboard.");
-            } else {
-                for (Standing s : LEADERBOARD) {
-                    if (score > s.SCORE) {
-                        name = JOptionPane.showInputDialog(this, "Enter your name for the leaderboard.");
-                        break;
-                    }
+        if (LEADERBOARD.size() < 3) {
+            addScore(name);
+        } else {
+            for (Standing s : LEADERBOARD) {
+                if (score > s.SCORE) {
+                    addScore(name);
+                    break;
                 }
             }
-
-            if (name == null || name.isEmpty()) {
-                name = "Nul";
-            }
         }
+    }
 
+
+    private void addScore(String name) {
+        while (name == null || name.length() < 3) {
+            name = JOptionPane.showInputDialog(this, "Enter your name for the leaderboard.");
+        }
         LEADERBOARD.add(new Standing(name, score));
     }
 
@@ -185,8 +169,8 @@ public class Pong extends JFrame {
         public final int SCORE;
 
         public Standing(String name, int score) {
-            this.NAME = name.substring(0, 3);
-            this.SCORE = score;
+            NAME = name.substring(0, 3);
+            SCORE = score;
         }
 
         @Override
@@ -206,8 +190,8 @@ public class Pong extends JFrame {
             TICK_CLOCK.start();
 
             Random rand = new Random();
-            ballDx = rand.nextInt() % 2 == 0 ? 4 : -4;
-            ballDy = rand.nextInt() % 2 == 0 ? 4 : -4;
+            ballDx = rand.nextBoolean() ? 4 : -4;
+            ballDy = rand.nextBoolean() ? 4 : -4;
 
             addMouseWheelListener(e -> movePaddle(PADDLE_SPEED * e.getWheelRotation()));
 
